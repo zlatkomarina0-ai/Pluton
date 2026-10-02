@@ -1,69 +1,59 @@
 from sqlalchemy.orm import Session
 
-from app.models import Fixture, League, Season, Team
+from app.models import Fixture, Prediction, User
 
 
-class FixturesService:
+class PredictionService:
     @staticmethod
     def list(db: Session, skip: int = 0, limit: int = 100):
-        return db.query(Fixture).offset(skip).limit(limit).all()
+        return db.query(Prediction).offset(skip).limit(limit).all()
 
     @staticmethod
-    def get_by_id(db: Session, fixture_id: str):
-        return db.query(Fixture).filter(Fixture.id == fixture_id).first()
+    def list_for_user(db: Session, user_id: str, skip: int = 0, limit: int = 100):
+        return (
+            db.query(Prediction)
+            .filter(Prediction.user_id == user_id)
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+
+    @staticmethod
+    def get_by_id(db: Session, prediction_id: str):
+        return db.query(Prediction).filter(Prediction.id == prediction_id).first()
 
     @staticmethod
     def create(
         db: Session,
         *,
-        sport_id: str,
-        league_id: str | None,
-        season_id: str | None,
-        home_team_id: str | None,
-        away_team_id: str | None,
-        status: str = "scheduled",
-        venue: str | None = None,
-        round_name: str | None = None,
-        competition_name: str | None = None,
-        external_id: str | None = None,
-        kickoff_at=None,
+        fixture_id: str,
+        user_id: str,
+        prediction_type: str,
+        home_score: int | None = None,
+        away_score: int | None = None,
+        market_type: str | None = None,
+        confidence: float | None = None,
+        strength: float | None = None,
     ):
-        if league_id:
-            league = db.query(League).filter(League.id == league_id).first()
-            if not league:
-                raise ValueError("League not found")
+        fixture = db.query(Fixture).filter(Fixture.id == fixture_id).first()
+        if not fixture:
+            raise ValueError("Fixture not found")
 
-        if season_id:
-            season = db.query(Season).filter(Season.id == season_id).first()
-            if not season:
-                raise ValueError("Season not found")
-            if league_id and season.league_id != league_id:
-                raise ValueError("Season does not belong to the supplied league")
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise ValueError("User not found")
 
-        if home_team_id:
-            home_team = db.query(Team).filter(Team.id == home_team_id).first()
-            if not home_team:
-                raise ValueError("Home team not found")
-
-        if away_team_id:
-            away_team = db.query(Team).filter(Team.id == away_team_id).first()
-            if not away_team:
-                raise ValueError("Away team not found")
-
-        fixture = Fixture(
-            sport_id=sport_id,
-            league_id=league_id,
-            season_id=season_id,
-            home_team_id=home_team_id,
-            away_team_id=away_team_id,
-            external_id=external_id,
-            kickoff_at=kickoff_at,
-            status=status,
-            venue=venue,
-            round_name=round_name,
-            competition_name=competition_name,
+        prediction = Prediction(
+            fixture_id=fixture_id,
+            user_id=user_id,
+            prediction_type=prediction_type,
+            home_score=home_score,
+            away_score=away_score,
+            market_type=market_type,
+            confidence=confidence,
+            strength=strength,
         )
-        db.add(fixture)
+        db.add(prediction)
         db.commit()
-        db.refresh(fixture)
-        return fixture
+        db.refresh(prediction)
+        return prediction
