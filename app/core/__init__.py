@@ -9,7 +9,7 @@ class Settings:
     # App
     APP_NAME = os.getenv("APP_NAME", "PLUTON")
     APP_VERSION = os.getenv("APP_VERSION", "1.0.0")
-    ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+    ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
 
     # Database
     USE_SQLITE = os.getenv("USE_SQLITE", "true").lower() in {"1", "true", "yes", "y"}
@@ -31,9 +31,18 @@ class Settings:
         if origin.strip()
     ]
 
-    # Security
+    # Security / runtime
     DEBUG = ENVIRONMENT == "development"
     TESTING = ENVIRONMENT == "testing"
 
+    @classmethod
+    def validate(cls):
+        if cls.ENVIRONMENT == "production":
+            if cls.JWT_SECRET in {"change-me-in-production-secret-key-256-bits", "dev-secret-change-in-production"}:
+                raise RuntimeError("JWT_SECRET must be set to a secure secret in production.")
+            if not cls.CORS_ORIGINS or cls.CORS_ORIGINS == ["*"]:
+                raise RuntimeError("CORS_ORIGINS must be set explicitly in production.")
+
 
 settings = Settings()
+settings.validate()

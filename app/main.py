@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 
 from app.core import settings
+from app.database import engine
 from app.routers import analysis, auth, fixtures, health, predictions, sports, users
 
 app = FastAPI(
@@ -12,7 +14,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -25,6 +27,12 @@ app.include_router(sports.router)
 app.include_router(fixtures.router)
 app.include_router(predictions.router)
 app.include_router(analysis.router)
+
+
+@app.on_event("startup")
+def startup_event():
+    with engine.connect() as conn:
+        conn.execute(text("SELECT 1"))
 
 
 @app.get("/")
