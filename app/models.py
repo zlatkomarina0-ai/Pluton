@@ -1,6 +1,6 @@
 import uuid
 from sqlalchemy import (
-    Column, String, Boolean, Date, DateTime, Integer, Text, ForeignKey, Numeric, JSON
+    Column, String, Boolean, Date, DateTime, Integer, Text, ForeignKey, Numeric, JSON, UniqueConstraint
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
@@ -76,6 +76,10 @@ class Season(Base):
     start_date = Column(Date, nullable=True)
     end_date = Column(Date, nullable=True)
     active = Column(Boolean, default=True, nullable=False)
+    is_archived = Column(Boolean, default=False, nullable=False)
+    is_locked = Column(Boolean, default=False, nullable=False)
+    version = Column(Integer, default=1, nullable=False)
+    protected_from_auto_update = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 
@@ -96,12 +100,17 @@ class Team(Base):
 
 class Fixture(Base):
     __tablename__ = "fixtures"
+    __table_args__ = (
+        UniqueConstraint("sport_id", "external_id", name="uq_fixture_external_id_per_sport"),
+        UniqueConstraint("sport_id", "event_id", name="uq_fixture_event_id_per_sport"),
+    )
 
     id = Column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
     sport_id = Column(UUID(as_uuid=False), ForeignKey("sports.id"), nullable=False)
     league_id = Column(UUID(as_uuid=False), ForeignKey("leagues.id"), nullable=True)
     season_id = Column(UUID(as_uuid=False), ForeignKey("seasons.id"), nullable=True)
     external_id = Column(String(255), nullable=True)
+    event_id = Column(String(255), nullable=True)
     home_team_id = Column(UUID(as_uuid=False), ForeignKey("teams.id"), nullable=True)
     away_team_id = Column(UUID(as_uuid=False), ForeignKey("teams.id"), nullable=True)
     kickoff_at = Column(DateTime(timezone=True), nullable=True)
@@ -164,6 +173,11 @@ class Prediction(Base):
     market_type = Column(String(100), nullable=True)
     confidence = Column(Numeric(5, 2), nullable=True)
     strength = Column(Numeric(5, 2), nullable=True)
+    is_my_tip = Column(Boolean, default=False, nullable=False)
+    is_agreed_tip = Column(Boolean, default=False, nullable=False)
+    is_protected = Column(Boolean, default=False, nullable=False)
+    protected_by_user_id = Column(UUID(as_uuid=False), ForeignKey("users.id"), nullable=True)
+    protected_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -232,3 +246,24 @@ class AuditLog(Base):
     action = Column(String(100), nullable=False)
     details = Column(JSON, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+__all__ = [
+    "User",
+    "Role",
+    "UserRole",
+    "Sport",
+    "League",
+    "Season",
+    "Team",
+    "Fixture",
+    "SourceRegistry",
+    "FixtureSourceData",
+    "SourceQuality",
+    "Prediction",
+    "PredictionHistory",
+    "AnalysisResult",
+    "PerformanceSummary",
+    "ResultEvent",
+    "AuditLog",
+]
