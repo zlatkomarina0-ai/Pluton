@@ -86,6 +86,10 @@ class SeasonBase(BaseModel):
     start_date: Optional[str] = None
     end_date: Optional[str] = None
     active: bool = True
+    is_archived: bool = False
+    is_locked: bool = False
+    version: int = 1
+    protected_from_auto_update: bool = True
 
 
 class SeasonCreate(SeasonBase):
@@ -128,6 +132,7 @@ class FixtureBase(BaseModel):
     league_id: Optional[str] = None
     season_id: Optional[str] = None
     external_id: Optional[str] = None
+    event_id: Optional[str] = None
     home_team_id: Optional[str] = None
     away_team_id: Optional[str] = None
     kickoff_at: Optional[str] = None
@@ -159,6 +164,11 @@ class PredictionBase(BaseModel):
     market_type: Optional[str] = None
     confidence: Optional[float] = None
     strength: Optional[float] = None
+    is_my_tip: bool = False
+    is_agreed_tip: bool = False
+    is_protected: bool = False
+    protected_by_user_id: Optional[str] = None
+    protected_at: Optional[str] = None
 
 
 class PredictionCreate(PredictionBase):
