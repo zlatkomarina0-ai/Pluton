@@ -5,8 +5,17 @@ from app.models import User
 
 
 class AuthService:
+    """User authentication and authorization service"""
+
     @staticmethod
-    def register(db: Session, email: str, username: str, password: str, full_name: str | None = None) -> User:
+    def register(
+        db: Session,
+        email: str,
+        username: str,
+        password: str,
+        full_name: str | None = None,
+    ) -> User:
+        """Register new user with email, username, and password"""
         existing = db.query(User).filter((User.email == email) | (User.username == username)).first()
         if existing:
             raise ValueError("User with this email or username already exists")
@@ -24,10 +33,14 @@ class AuthService:
         return user
 
     @staticmethod
-    def login(db: Session, email: str, password: str):
+    def login(db: Session, email: str, password: str) -> dict:
+        """Authenticate user and return JWT token"""
         user = db.query(User).filter(User.email == email).first()
         if not user or not verify_password(password, user.password_hash):
             raise ValueError("Invalid email or password")
+
+        if not user.is_active:
+            raise ValueError("User account is inactive")
 
         token = create_access_token(str(user.id))
         return {
@@ -41,3 +54,8 @@ class AuthService:
                 "is_active": user.is_active,
             },
         }
+
+    @staticmethod
+    def get_user_by_id(db: Session, user_id: str) -> User | None:
+        """Get user by ID"""
+        return db.query(User).filter(User.id == user_id).first()
