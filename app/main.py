@@ -1,42 +1,24 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from typing import List
 
-from app.core import settings
-from app.database import Base, engine
-from app.routers.auth import router as auth_router
-from app.routers.health import router as health_router
-from app.routers.pluton import router as pluton_router
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
 
-app = FastAPI(
-    title=settings.APP_NAME,
-    version=settings.APP_VERSION,
-    description="PLUTON: Sports Analytics & Prediction Engine",
-)
+from app.dependencies import get_db
+from app.schemas import AnalysisResultCreate, AnalysisResultRead
+from app.services.analysis_service import AnalysisService
 
-# CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS if "*" not in settings.CORS_ORIGINS else ["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Create tables
-Base.metadata.create_all(bind=engine)
-
-# Include routers
-app.include_router(health_router)
-app.include_router(auth_router)
-app.include_router(pluton_router)
+router = APIRouter(prefix="/api/v1", tags=["analysis"])
 
 
-@app.get("/")
-async def root():
-    """Root endpoint"""
-    return {
-        "message": "PLUTON API is running",
-        "service": settings.APP_NAME,
-        "version": settings.APP_VERSION,
-        "environment": settings.ENVIRONMENT,
-    }
+@router.get("/analysis-results", response_model=List[AnalysisResultRead])
+def get_analysis_results(db: Session = Depends(get_db), skip: int = 0, limit: int = 100):
+    return AnalysisService.list(db, skip=skip, limit=limit)
+
+
+@router.post("/analysis-results", response_model=AnalysisResultRead, status_code=status.HTTP_201_CREATED)
+def create_analysis_result(payload: AnalysisResultCreate, db: Session = Depends(get_db)):
+    try:
+        result = AnalysisService.analyze_fixture(db, payload.fixture_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return result
