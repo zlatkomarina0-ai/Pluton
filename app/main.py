@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core import settings
-from app.routers import analysis, auth, fixtures, health, predictions
+from app.routers import analysis, auth, fixtures, health, predictions, sports, users
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -20,6 +20,8 @@ app.add_middleware(
 
 app.include_router(health.router)
 app.include_router(auth.router)
+app.include_router(users.router)
+app.include_router(sports.router)
 app.include_router(fixtures.router)
 app.include_router(predictions.router)
 app.include_router(analysis.router)

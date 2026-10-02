@@ -1,4 +1,4 @@
-from . import analysis, auth, fixtures, health, predictions, pluton
+from . import analysis, auth, fixtures, health, predictions, sports, users
 
 __all__ = [
     "analysis",
@@ -6,5 +6,6 @@ __all__ = [
     "fixtures",
     "health",
     "predictions",
-    "pluton",
+    "sports",
+    "users",
 ]
