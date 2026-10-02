@@ -14,7 +14,7 @@ security = HTTPBearer(auto_error=False)
 
 def hash_password(password: str) -> str:
     """Hash password using PBKDF2-SHA256"""
-    salt = secrets.token_hex(8)
+    salt = secrets.token_hex(16)
     digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 200_000)
     return f"pbkdf2_sha256${salt}${digest.hex()}"
 
@@ -38,7 +38,7 @@ def create_access_token(subject: str, expires_delta: timedelta | None = None) ->
     if expires_delta is None:
         expires_delta = timedelta(minutes=settings.JWT_EXPIRES_MINUTES)
     expire = datetime.utcnow() + expires_delta
-    payload = {"sub": subject, "exp": expire}
+    payload = {"sub": subject, "exp": expire, "iat": datetime.utcnow()}
     return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 
 
@@ -55,7 +55,9 @@ def decode_access_token(token: str) -> Dict[str, Any]:
 async def get_current_user_id(credentials: HTTPAuthorizationCredentials = Depends(security)) -> str:
     """Extract and validate current user from JWT"""
     if credentials is None or credentials.scheme.lower() != "bearer":
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing or invalid authorization header")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing or invalid authorization header"
+        )
 
     payload = decode_access_token(credentials.credentials)
     user_id = payload.get("sub")

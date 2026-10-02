@@ -1,55 +1,41 @@
 from sqlalchemy.orm import Session
 
-from app.models import Fixture, Prediction, User
+from app.models import AnalysisResult, Fixture, Prediction
+from app.services.prediction_engine import PredictionEngine
 
 
-class PredictionService:
+class AnalysisService:
     @staticmethod
     def list(db: Session, skip: int = 0, limit: int = 100):
-        return db.query(Prediction).offset(skip).limit(limit).all()
+        return db.query(AnalysisResult).offset(skip).limit(limit).all()
 
     @staticmethod
-    def list_for_user(db: Session, user_id: str, skip: int = 0, limit: int = 100):
-        return (
-            db.query(Prediction)
-            .filter(Prediction.user_id == user_id)
-            .offset(skip)
-            .limit(limit)
-            .all()
-        )
+    def get_by_fixture(db: Session, fixture_id: str):
+        return db.query(AnalysisResult).filter(AnalysisResult.fixture_id == fixture_id).first()
 
     @staticmethod
-    def create(
-        db: Session,
-        *,
-        fixture_id: str,
-        user_id: str,
-        prediction_type: str,
-        home_score: int | None = None,
-        away_score: int | None = None,
-        market_type: str | None = None,
-        confidence: float | None = None,
-        strength: float | None = None,
-    ):
+    def analyze_fixture(db: Session, fixture_id: str):
+        """
+        Analyze a fixture using the prediction engine
+        """
+        return PredictionEngine.analyze_fixture(db, fixture_id)
+
+    @staticmethod
+    def get_fixture_context(db: Session, fixture_id: str):
+        """
+        Get full context for a fixture including analysis and predictions
+        """
         fixture = db.query(Fixture).filter(Fixture.id == fixture_id).first()
         if not fixture:
             raise ValueError("Fixture not found")
 
-        user = db.query(User).filter(User.id == user_id).first()
-        if not user:
-            raise ValueError("User not found")
+        predictions = db.query(Prediction).filter(Prediction.fixture_id == fixture_id).all()
+        analysis = db.query(AnalysisResult).filter(AnalysisResult.fixture_id == fixture_id).first()
 
-        prediction = Prediction(
-            fixture_id=fixture_id,
-            user_id=user_id,
-            prediction_type=prediction_type,
-            home_score=home_score,
-            away_score=away_score,
-            market_type=market_type,
-            confidence=confidence,
-            strength=strength,
-        )
-        db.add(prediction)
-        db.commit()
-        db.refresh(prediction)
-        return prediction
+        return {
+            "fixture": fixture,
+            "predictions": predictions,
+            "analysis": analysis,
+            "prediction_count": len(predictions),
+            "has_analysis": analysis is not None,
+        }
