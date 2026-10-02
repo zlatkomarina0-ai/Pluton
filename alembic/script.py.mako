@@ -1,4 +1,4 @@
-"""Alelembic script template."""
+"""Alembic script template."""
 
 from alembic import op
 import sqlalchemy as sa
@@ -12,8 +12,10 @@ depends_on = "%(depends_on)s"
 
 
 def upgrade() -> None:
+    """Upgrade schema"""
     %(upgrades)s
 
 
 def downgrade() -> None:
+    """Downgrade schema"""
     %(downgrades)s
