@@ -1,3 +1,10 @@
-from .pluton import router
+from . import analysis, auth, fixtures, health, predictions, pluton
 
-__all__ = ["router"]
+__all__ = [
+    "analysis",
+    "auth",
+    "fixtures",
+    "health",
+    "predictions",
+    "pluton",
+]

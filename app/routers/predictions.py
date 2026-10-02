@@ -3,44 +3,46 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.core.security import get_current_user_id
 from app.dependencies import get_db
-from app.models import Fixture
-from app.schemas import FixtureCreate, FixtureRead
-from app.services.fixtures_service import FixturesService
+from app.schemas import PredictionCreate, PredictionRead
+from app.services.prediction_service import PredictionService
 
-router = APIRouter(prefix="/api/v1", tags=["fixtures"])
-
-
-@router.get("/fixtures", response_model=List[FixtureRead])
-def get_fixtures(db: Session = Depends(get_db), skip: int = 0, limit: int = 100):
-    return FixturesService.list(db, skip=skip, limit=limit)
+router = APIRouter(prefix="/api/v1", tags=["predictions"])
 
 
-@router.get("/fixtures/{fixture_id}", response_model=FixtureRead)
-def get_fixture(fixture_id: str, db: Session = Depends(get_db)):
-    fixture = FixturesService.get_by_id(db, fixture_id)
-    if not fixture:
-        raise HTTPException(status_code=404, detail="Fixture not found")
-    return fixture
+@router.get("/predictions", response_model=List[PredictionRead])
+def get_predictions(db: Session = Depends(get_db), skip: int = 0, limit: int = 100):
+    return PredictionService.list(db, skip=skip, limit=limit)
 
 
-@router.post("/fixtures", response_model=FixtureRead, status_code=status.HTTP_201_CREATED)
-def create_fixture(payload: FixtureCreate, db: Session = Depends(get_db)):
+@router.get("/predictions/me", response_model=List[PredictionRead])
+def get_my_predictions(
+    current_user_id: str = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+    skip: int = 0,
+    limit: int = 100,
+):
+    return PredictionService.list_for_user(db, current_user_id, skip=skip, limit=limit)
+
+
+@router.post("/predictions", response_model=PredictionRead, status_code=status.HTTP_201_CREATED)
+def create_prediction(
+    payload: PredictionCreate,
+    current_user_id: str = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
     try:
-        fixture = FixturesService.create(
+        return PredictionService.create(
             db,
-            sport_id=payload.sport_id,
-            league_id=payload.league_id,
-            season_id=payload.season_id,
-            home_team_id=payload.home_team_id,
-            away_team_id=payload.away_team_id,
-            status=payload.status,
-            venue=payload.venue,
-            round_name=payload.round_name,
-            competition_name=payload.competition_name,
-            external_id=payload.external_id,
-            kickoff_at=payload.kickoff_at,
+            fixture_id=payload.fixture_id,
+            user_id=current_user_id,
+            prediction_type=payload.prediction_type,
+            home_score=payload.home_score,
+            away_score=payload.away_score,
+            market_type=payload.market_type,
+            confidence=payload.confidence,
+            strength=payload.strength,
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    return fixture

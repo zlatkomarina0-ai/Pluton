@@ -1,24 +1,35 @@
-from typing import List
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from app.core import settings
+from app.routers import analysis, auth, fixtures, health, predictions
 
-from app.dependencies import get_db
-from app.schemas import AnalysisResultCreate, AnalysisResultRead
-from app.services.analysis_service import AnalysisService
+app = FastAPI(
+    title=settings.APP_NAME,
+    version=settings.APP_VERSION,
+    description="PLUTON sports prediction API",
+)
 
-router = APIRouter(prefix="/api/v1", tags=["analysis"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(health.router)
+app.include_router(auth.router)
+app.include_router(fixtures.router)
+app.include_router(predictions.router)
+app.include_router(analysis.router)
 
 
-@router.get("/analysis-results", response_model=List[AnalysisResultRead])
-def get_analysis_results(db: Session = Depends(get_db), skip: int = 0, limit: int = 100):
-    return AnalysisService.list(db, skip=skip, limit=limit)
+@app.get("/")
+def root():
+    return {"message": "PLUTON API is running"}
 
 
-@router.post("/analysis-results", response_model=AnalysisResultRead, status_code=status.HTTP_201_CREATED)
-def create_analysis_result(payload: AnalysisResultCreate, db: Session = Depends(get_db)):
-    try:
-        result = AnalysisService.analyze_fixture(db, payload.fixture_id)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-    return result
+@app.get("/ready")
+def readiness():
+    return {"ready": True}
