@@ -1,7 +1,24 @@
 from typing import Optional
-from uuid import UUID
-from datetime import datetime, date
-from pydantic import BaseModel
+
+from pydantic import BaseModel, Field
+
+
+class RegisterRequest(BaseModel):
+    email: str
+    username: str
+    password: str = Field(..., min_length=6)
+    full_name: Optional[str] = None
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: dict
 
 
 class UserBase(BaseModel):
@@ -15,10 +32,10 @@ class UserCreate(UserBase):
 
 
 class UserRead(UserBase):
-    id: UUID
+    id: str
     is_active: bool
-    created_at: datetime
-    updated_at: datetime
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
 
     class Config:
         orm_mode = True
@@ -35,15 +52,15 @@ class SportCreate(SportBase):
 
 
 class SportRead(SportBase):
-    id: UUID
-    created_at: datetime
+    id: str
+    created_at: Optional[str] = None
 
     class Config:
         orm_mode = True
 
 
 class LeagueBase(BaseModel):
-    sport_id: UUID
+    sport_id: str
     code: Optional[str] = None
     name: str
     country: Optional[str] = None
@@ -56,18 +73,18 @@ class LeagueCreate(LeagueBase):
 
 
 class LeagueRead(LeagueBase):
-    id: UUID
-    created_at: datetime
+    id: str
+    created_at: Optional[str] = None
 
     class Config:
         orm_mode = True
 
 
 class SeasonBase(BaseModel):
-    league_id: UUID
+    league_id: str
     name: str
-    start_date: Optional[date] = None
-    end_date: Optional[date] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
     active: bool = True
 
 
@@ -76,15 +93,15 @@ class SeasonCreate(SeasonBase):
 
 
 class SeasonRead(SeasonBase):
-    id: UUID
-    created_at: datetime
+    id: str
+    created_at: Optional[str] = None
 
     class Config:
         orm_mode = True
 
 
 class TeamBase(BaseModel):
-    sport_id: UUID
+    sport_id: str
     external_id: Optional[str] = None
     name: str
     short_name: Optional[str] = None
@@ -98,22 +115,22 @@ class TeamCreate(TeamBase):
 
 
 class TeamRead(TeamBase):
-    id: UUID
-    created_at: datetime
-    updated_at: datetime
+    id: str
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
 
     class Config:
         orm_mode = True
 
 
 class FixtureBase(BaseModel):
-    sport_id: UUID
-    league_id: Optional[UUID] = None
-    season_id: Optional[UUID] = None
+    sport_id: str
+    league_id: Optional[str] = None
+    season_id: Optional[str] = None
     external_id: Optional[str] = None
-    home_team_id: Optional[UUID] = None
-    away_team_id: Optional[UUID] = None
-    kickoff_at: Optional[datetime] = None
+    home_team_id: Optional[str] = None
+    away_team_id: Optional[str] = None
+    kickoff_at: Optional[str] = None
     status: str = "scheduled"
     venue: Optional[str] = None
     round_name: Optional[str] = None
@@ -125,17 +142,17 @@ class FixtureCreate(FixtureBase):
 
 
 class FixtureRead(FixtureBase):
-    id: UUID
-    created_at: datetime
-    updated_at: datetime
+    id: str
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
 
     class Config:
         orm_mode = True
 
 
 class PredictionBase(BaseModel):
-    fixture_id: UUID
-    user_id: Optional[UUID] = None
+    fixture_id: str
+    user_id: Optional[str] = None
     prediction_type: str
     home_score: Optional[int] = None
     away_score: Optional[int] = None
@@ -149,16 +166,16 @@ class PredictionCreate(PredictionBase):
 
 
 class PredictionRead(PredictionBase):
-    id: UUID
-    created_at: datetime
-    updated_at: datetime
+    id: str
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
 
     class Config:
         orm_mode = True
 
 
 class AnalysisResultBase(BaseModel):
-    fixture_id: UUID
+    fixture_id: str
     source_summary: Optional[dict] = None
     consensus_score: Optional[float] = None
     weighted_score: Optional[float] = None
@@ -173,8 +190,8 @@ class AnalysisResultCreate(AnalysisResultBase):
 
 
 class AnalysisResultRead(AnalysisResultBase):
-    id: UUID
-    created_at: datetime
+    id: str
+    created_at: Optional[str] = None
 
     class Config:
         orm_mode = True
