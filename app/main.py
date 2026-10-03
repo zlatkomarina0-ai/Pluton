@@ -1,24 +1,25 @@
-from typing import List
+from fastapi import FastAPI
+from app.routers.health import router as health_router
+from app.routers.auth import router as auth_router
+from app.routers.pluton import router as pluton_router
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-
-from app.dependencies import get_db
-from app.schemas import AnalysisResultCreate, AnalysisResultRead
-from app.services.analysis_service import AnalysisService
-
-router = APIRouter(prefix="/api/v1", tags=["analysis"])
-
-
-@router.get("/analysis-results", response_model=List[AnalysisResultRead])
-def get_analysis_results(db: Session = Depends(get_db), skip: int = 0, limit: int = 100):
-    return AnalysisService.list(db, skip=skip, limit=limit)
+app = FastAPI(
+    title="PLUTON",
+    version="1.0.0",
+    description="PLUTON API Server"
+)
 
 
-@router.post("/analysis-results", response_model=AnalysisResultRead, status_code=status.HTTP_201_CREATED)
-def create_analysis_result(payload: AnalysisResultCreate, db: Session = Depends(get_db)):
-    try:
-        result = AnalysisService.analyze_fixture(db, payload.fixture_id)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-    return result
+@app.get("/")
+def read_root():
+    return {"message": "PLUTON API", "service": "PLUTON", "version": "1.0.0"}
+
+
+@app.get("/ready")
+def readiness_check():
+    return {"ready": True, "service": "PLUTON"}
+
+
+app.include_router(health_router)
+app.include_router(auth_router)
+app.include_router(pluton_router)
