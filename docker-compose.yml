@@ -2,9 +2,9 @@ version: '3.8'
 
 services:
   backend:
-    build: ./backend
+    build: .
     ports:
-      - "8000:8000"
+      - "3000:3000"
     environment:
       - DATABASE_URL=postgresql://pluton_user:pluton_password@db:5432/pluton_db
     restart: on-failure
@@ -22,9 +22,10 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      # Автоматско покренување на шемата и семената од новата папка при прво кревање
+      # Директно мапирање на твоите реални миграции и семе од локалната меморија
       - ./database/schema.sql:/docker-entrypoint-initdb.d/1-schema.sql
-      - ./database/seed.sql:/docker-entrypoint-initdb.d/2-seed.sql
+      - ./database/migrations/001_phase1_base_schema.sql:/docker-entrypoint-initdb.d/2-migration.sql
+      - ./database/seeds/001_realistic_seed_data.sql:/docker-entrypoint-initdb.d/3-seed.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U pluton_user -d pluton_db"]
       interval: 3s
