@@ -1,12 +1,45 @@
-name: PLUTON Automated Production Verification
-on: [push, workflow_dispatch]
+name: PLUTON Real Runtime Verification
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
 jobs:
-  verify:
+  docker-runtime-check:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-      - name: Verify Setup
-        run: |
-          echo "Bypassing local server requirements..."
-          test -f index.html && echo "Success: index.html is verified!"
+    - name: Вчитување на кодот (Checkout)
+      uses: actions/checkout@v3
+
+    - name: Покренување на Docker Environment и PostgreSQL
+      run: |
+        echo "=== СТАРТУВАЊЕ НА DOCKER COMPOSE ==="
+        docker compose up --build -d
+
+    - name: Проверка дали PostgreSQL и апликацијата се иницијализирани
+      run: |
+        echo "Почекај 10 секунди за целосна иницијализација на базата..."
+        sleep 10
+        docker compose ps
+
+    - name: Извршување на реална HTTP Верификација (Health Check)
+      run: |
+        echo "=== ИЗВРШУВАЊЕ CURL НА АПЛИКАЦИЈАТА ==="
+        RESPONSE=$(curl -s http://localhost:8000/api/health)
+        echo "Одговор од серверот: $RESPONSE"
+        
+        # Проверка дали одговорот содржи статус "ok"
+        if echo "$RESPONSE" | grep -q '"status":"ok"'; then
+          echo "УСПЕШНО: PLUTON и PostgreSQL се успешно иницијализирани без грешки!"
+        else
+          echo "ГРЕШКА: Апликацијата или базата падна при иницијализација!"
+          docker compose logs
+          exit 1
+        fi
+
+    - name: Гасење на контејнерите и чистење
+      if: always()
+      run: |
+        docker compose down -v
