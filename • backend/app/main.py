@@ -1,25 +1,18 @@
-from fastapi import FastAPI
-from app.routers.health import router as health_router
-from app.routers.auth import router as auth_router
-from app.routers.pluton import router as pluton_router
+from fastapi import FastAPI, HTTPException
+import psycopg2
+import os
 
-app = FastAPI(
-    title="PLUTON",
-    version="1.0.0",
-    description="PLUTON API Server"
-)
+app = FastAPI(title="PLUTON Core")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://pluton_user:pluton_password@db:5432/pluton_db")
 
-
-@app.get("/")
-def read_root():
-    return {"message": "PLUTON API", "service": "PLUTON", "version": "1.0.0"}
-
-
-@app.get("/ready")
-def readiness_check():
-    return {"ready": True, "service": "PLUTON"}
-
-
-app.include_router(health_router)
-app.include_router(auth_router)
-app.include_router(pluton_router)
+@app.get("/api/health")
+def health_check():
+    try:
+        conn = psycopg2.connect(DATABASE_URL)
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1;")
+        cursor.close()
+        conn.close()
+        return {"status": "ok", "service": "PLUTON", "phase": "1"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
