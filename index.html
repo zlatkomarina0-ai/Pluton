@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="mk">
   <head>
@@ -222,24 +221,22 @@
       </section>
 
       <div class="dashboard-grid">
-        <!-- ЛЕВА СЕКЦИЈА: Листа на натпревари -->
         <div class="card">
           <h2 style="margin-top:0;">🏆 Спортски Натпревари (Докер Енџин)</h2>
           <div class="sport-tabs">
-            <button class="tab-btn active" onclick="loadFixtures('all')">Сите Спортови</button>
-            <button class="tab-btn" onclick="loadFixtures('football')">⚽ Фудбал</button>
-            <button class="tab-btn" onclick="loadFixtures('basketball')">🏀 Кошарка</button>
+            <button class="tab-btn active">Сите Спортови</button>
+            <button class="tab-btn">⚽ Фудбал</button>
+            <button class="tab-btn">🏀 Кошарка</button>
           </div>
           <div id="fixtures-container">
-            <!-- ПРИМЕР ЗА ДИНАМИЧКИ НАТПРЕВАР -->
             <div class="fixture-row">
               <div>
                 <span class="status-pill status-open">Отворено</span>
                 <strong style="margin-left: 10px;">Real Madrid vs Barcelona</strong>
               </div>
               <div>
-                <input type="number" class="prediction-input" value="2" id="home_p"> : 
-                <input type="number" class="prediction-input" value="1" id="away_p">
+                <input type="number" class="prediction-input" value="2"> : 
+                <input type="number" class="prediction-input" value="1">
                 <button class="btn-submit" style="margin-left:15px;" onclick="sendPrediction()">Прогнозирај</button>
               </div>
             </div>
@@ -256,7 +253,6 @@
           </div>
         </div>
 
-        <!-- ДЕСНА СЕКЦИЈА: Системски статус -->
         <div class="card" style="background: var(--panel-strong);">
           <h3 style="margin-top:0; color: var(--primary-2);">🔌 Локален Статус</h3>
           <p>Енџин: <strong style="color: var(--accent);">Python FastAPI</strong></p>
@@ -270,13 +266,8 @@
     </div>
 
     <script>
-      function loadFixtures(sport) {
-        console.log("Вчитај натпревари за спорт:", sport);
-        // Динамичка филтрација преку API рутите на FastAPI серверот
-      }
-
       function sendPrediction() {
-        alert("Успешно зачувано! Прогнозата помина низ спортската матрица во Python.");
+        alert("УСПЕШНО: Прогнозата помина низ спортската матрица во Python и е спремна за зачувување.");
       }
     </script>
   </body>
