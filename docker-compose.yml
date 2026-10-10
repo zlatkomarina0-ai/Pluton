@@ -15,14 +15,14 @@ services:
   db:
     image: postgres:15
     environment:
-      - POSTGRES_DB=pluton_db
-      - POSTGRES_USER=pluton_user
-      - POSTGRES_PASSWORD=pluton_password
+      - POSTGRES_DB: pluton_db
+      - POSTGRES_USER: pluton_user
+      - POSTGRES_PASSWORD: pluton_password
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      # Директно мапирање на твоите реални миграции и семе од локалната меморија
+      # Точно мапирање на твоите реални SQL скрипти од локалната меморија
       - ./database/schema.sql:/docker-entrypoint-initdb.d/1-schema.sql
       - ./database/migrations/001_phase1_base_schema.sql:/docker-entrypoint-initdb.d/2-migration.sql
       - ./database/seeds/001_realistic_seed_data.sql:/docker-entrypoint-initdb.d/3-seed.sql
