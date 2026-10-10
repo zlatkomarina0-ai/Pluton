@@ -1,1 +1,283 @@
 
+<!DOCTYPE html>
+<html lang="mk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PLUTON | Intelligent System Platform</title>
+    <style>
+      :root {
+        --bg: #08131f;
+        --bg-2: #0d1c2d;
+        --panel: rgba(17, 27, 40, 0.8);
+        --panel-strong: #111f2d;
+        --panel-soft: #102235;
+        --primary: #7c9cff;
+        --primary-2: #64e0ff;
+        --accent: #7ef0c4;
+        --text: #edf4ff;
+        --muted: #9bb0c8;
+        --border: rgba(148, 176, 219, 0.18);
+        --shadow: 0 18px 50px rgba(8, 19, 31, 0.45);
+        --radius: 22px;
+      }
+
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+
+      body {
+        margin: 0;
+        font-family: "Inter", "Segoe UI", sans-serif;
+        background:
+          radial-gradient(circle at top, rgba(124, 156, 255, 0.2), transparent 35%),
+          radial-gradient(circle at bottom right, rgba(100, 224, 255, 0.12), transparent 30%),
+          linear-gradient(180deg, var(--bg) 0%, #091722 100%);
+        color: var(--text);
+        line-height: 1.6;
+      }
+
+      a { text-decoration: none; color: inherit; }
+
+      .container {
+        width: min(1180px, calc(100% - 32px));
+        margin: 0 auto;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        backdrop-filter: blur(18px);
+        background: rgba(8, 19, 31, 0.7);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .nav {
+        height: 78px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .brand-mark {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, var(--primary), var(--primary-2));
+        color: #061217;
+        box-shadow: 0 14px 36px rgba(100, 224, 255, 0.28);
+      }
+
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 26px;
+        color: var(--muted);
+        font-size: 0.96rem;
+      }
+
+      .nav-links a:hover, .nav-links a.active { color: var(--text); }
+
+      .hero { padding: 60px 0; text-align: center; }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0.5rem 0.9rem;
+        background: rgba(124, 156, 255, 0.08);
+        border: 1px solid rgba(124, 156, 255, 0.2);
+        border-radius: 999px;
+        font-size: 0.78rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #d4dcff;
+      }
+
+      .eyebrow::before {
+        content: ""; width: 8px; height: 8px; border-radius: 50%;
+        background: var(--accent); box-shadow: 0 0 16px var(--accent);
+      }
+
+      h1 { margin: 22px 0 20px; font-size: clamp(2.5rem, 5vw, 4rem); line-height: 1.1; }
+      .gradient-text {
+        background: linear-gradient(135deg, #dfe7ff 0%, #7c9cff 25%, #64e0ff 60%, #7ef0c4 100%);
+        -webkit-background-clip: text; background-clip: text; color: transparent;
+      }
+
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 30px;
+        margin-bottom: 60px;
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 24px;
+        box-shadow: var(--shadow);
+      }
+
+      .sport-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .tab-btn {
+        background: var(--panel-soft);
+        border: 1px solid var(--border);
+        color: var(--muted);
+        padding: 10px 20px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .tab-btn.active {
+        background: linear-gradient(135deg, var(--primary), var(--primary-2));
+        color: #061217;
+        border-color: transparent;
+      }
+
+      .fixture-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px;
+        background: rgba(255,255,255,0.02);
+        border-radius: 14px;
+        margin-bottom: 12px;
+        border: 1px solid rgba(255,255,255,0.05);
+      }
+
+      .status-pill {
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .status-open { background: rgba(126, 240, 196, 0.15); color: var(--accent); }
+      .status-locked { background: rgba(255, 100, 100, 0.15); color: #ff6464; }
+
+      .prediction-input {
+        width: 50px;
+        text-align: center;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        color: white;
+        padding: 6px;
+        border-radius: 8px;
+        font-weight: bold;
+      }
+
+      .btn-submit {
+        background: linear-gradient(135deg, var(--primary), var(--primary-2));
+        color: #061217; border: none; padding: 8px 16px; border-radius: 8px;
+        font-weight: bold; cursor: pointer;
+      }
+
+      @media (max-width: 768px) {
+        .dashboard-grid { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+
+    <div class="topbar">
+      <div class="container nav">
+        <div class="brand">
+          <div class="brand-mark">P</div>
+          <span>Pluton Platform</span>
+        </div>
+        <div class="nav-links">
+          <a href="#" class="active">Контролна Табла</a>
+          <a href="#">Лиги</a>
+          <a href="#">Правила</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <section class="hero">
+        <div class="eyebrow">Phase 1 Средено</div>
+        <h1>Интелигентен Систем <br><span class="gradient-text">PLUTON Core Engine</span></h1>
+        <p class="lead" style="margin: 0 auto; color: var(--muted);">Преглед на спортски натпревари, внатрешни деловни матрици и зачувување прогнози во реално време.</p>
+      </section>
+
+      <div class="dashboard-grid">
+        <!-- ЛЕВА СЕКЦИЈА: Листа на натпревари -->
+        <div class="card">
+          <h2 style="margin-top:0;">🏆 Спортски Натпревари (Докер Енџин)</h2>
+          <div class="sport-tabs">
+            <button class="tab-btn active" onclick="loadFixtures('all')">Сите Спортови</button>
+            <button class="tab-btn" onclick="loadFixtures('football')">⚽ Фудбал</button>
+            <button class="tab-btn" onclick="loadFixtures('basketball')">🏀 Кошарка</button>
+          </div>
+          <div id="fixtures-container">
+            <!-- ПРИМЕР ЗА ДИНАМИЧКИ НАТПРЕВАР -->
+            <div class="fixture-row">
+              <div>
+                <span class="status-pill status-open">Отворено</span>
+                <strong style="margin-left: 10px;">Real Madrid vs Barcelona</strong>
+              </div>
+              <div>
+                <input type="number" class="prediction-input" value="2" id="home_p"> : 
+                <input type="number" class="prediction-input" value="1" id="away_p">
+                <button class="btn-submit" style="margin-left:15px;" onclick="sendPrediction()">Прогнозирај</button>
+              </div>
+            </div>
+            
+            <div class="fixture-row">
+              <div>
+                <span class="status-pill status-locked">Заклучено</span>
+                <strong style="margin-left: 10px;">Lakers vs Celtics</strong>
+              </div>
+              <div style="color: var(--muted); font-weight: bold; padding-right: 20px;">
+                Блокирано (SQL Lock)
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ДЕСНА СЕКЦИЈА: Системски статус -->
+        <div class="card" style="background: var(--panel-strong);">
+          <h3 style="margin-top:0; color: var(--primary-2);">🔌 Локален Статус</h3>
+          <p>Енџин: <strong style="color: var(--accent);">Python FastAPI</strong></p>
+          <p>База: <strong style="color: var(--accent);">PostgreSQL (Healthy)</strong></p>
+          <p>Режим: <strong style="color: var(--primary);">Без надворешно API</strong></p>
+          <hr style="border-color: var(--border);">
+          <h4 style="margin-bottom: 5px;">Системска нотификација:</h4>
+          <p style="font-size:0.9rem; color: var(--muted); margin-top:0;">Копилотот може самостојно да ја надградува бизнис логиката во позадина бидејќи јадрото е поставено.</p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function loadFixtures(sport) {
+        console.log("Вчитај натпревари за спорт:", sport);
+        // Динамичка филтрација преку API рутите на FastAPI серверот
+      }
+
+      function sendPrediction() {
+        alert("Успешно зачувано! Прогнозата помина низ спортската матрица во Python.");
+      }
+    </script>
+  </body>
+</html>
