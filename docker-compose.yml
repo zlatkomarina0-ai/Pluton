@@ -2,7 +2,10 @@ version: '3.8'
 
 services:
   backend:
-    build: ./backend
+    # Docker гради апликацију из фолдера backend/backend где се реално налазе Dockerfile и requirements.txt
+    build:
+      context: .
+      dockerfile: backend/backend/Dockerfile
     ports:
       - "3000:3000"
     environment:
@@ -22,10 +25,9 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      # Директно и сигурно мапирање на твојата реална база од папките
+      # Аутоматско покретање база и семена из твог database/ фолдера
       - ./database/schema.sql:/docker-entrypoint-initdb.d/1-schema.sql
-      - ./database/migrations/001_phase1_base_schema.sql:/docker-entrypoint-initdb.d/2-migration.sql
-      - ./database/seeds/001_realistic_seed_data.sql:/docker-entrypoint-initdb.d/3-seed.sql
+      - ./database/seed.sql:/docker-entrypoint-initdb.d/2-seed.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U pluton_user -d pluton_db"]
       interval: 3s
