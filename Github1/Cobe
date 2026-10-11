@@ -1,1 +1,11 @@
+{
+  "submodule": "PLUTON Cloud Core",
+  "phase": "1 // Core Extensions",
+  "execution_rules": {
+    "bypass_local_errors": true,
+    "force_cloud_validation": "ACTIVE",
+    "required_commands": ["TRIG_LOCK", "RUN_SCRAPE"]
+  },
+  "log": "Подпапката core е успешно иницијализирана во облакот."
+}
 
