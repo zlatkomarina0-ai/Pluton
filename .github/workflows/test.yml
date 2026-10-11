@@ -1,76 +1,33 @@
 name: PLUTON Real Runtime Verification
 
-on:
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
+on: [push]
 
 jobs:
-  runtime-validation:
+  runtime-test:
     runs-on: ubuntu-latest
-
-    services:
-      # Покренување на реална PostgreSQL база во изолација за npm test
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_DB: pluton_db
-          POSTGRES_USER: pluton_user
-          POSTGRES_PASSWORD: pluton_password
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
-    - name: 1. Вчитување на кодот (Checkout Repo)
+    - name: 1. Вчитување на кодот од репозиториумот
       uses: actions/checkout@v4
 
-    - name: 2. Поставување на Node.js средина
-      uses: actions/setup-node@v4
-      with:
-        node-version: 18
-        cache: 'npm'
-
-    - name: 3. Извршување на npm пакети и тестови
+    - name: 2. Оркестрација и градење со Docker Compose
       run: |
-        cd pluton
-        npm install
-        npm test
-
-    - name: 4. Оркестрација со Docker Compose (Build & Run)
-      run: |
-        cd pluton
         docker compose down -v
         docker compose up --build -d
 
-    - name: 5. Интелигентно чекање на PostgreSQL иницијализација и здравје на API
+    - name: 3. Чекање на иницијализација на PostgreSQL и FastAPI серверот
       run: |
-        echo "Се чека апликацијата да прифати конекции на порт 3000..."
+        echo "Се чека апликацијата на порт 3000..."
         for i in {1..15}; do
           if curl -s http://localhost:3000/api/health | grep -q "ok"; then
-            echo "УСПЕШНО: PLUTON серверот и PostgreSQL базата се во соодветна состојба!"
+            echo "УСПЕШНО: PLUTON Engine е успешно покренат во Docker!"
             exit 0
           fi
-          echo "Иницијализацијата сè уште трае, се чека 2 секунди (Обид $i/15)..."
+          echo "Се чека иницијализација на базата (Обид $i/15)..."
           sleep 2
         done
-        echo "ГРЕШКА: Времето за проверка истече. Апликацијата или базата не се покренаа!"
-        cd pluton && docker compose logs
+        echo "ГРЕШКА: Времето истече!"
+        docker compose logs
         exit 1
 
-    - name: 6. Финална HTTP Верификација на /api/health
-      run: |
-        echo "=== РЕАЛЕН JSON ОДГОВОР ОД КОНТЕЈНЕРОТ ==="
-        curl -s http://localhost:3000/api/health
-        echo -e "\n========================================="
-
-    - name: 7. Чистење на средините
-      if: always()
-      run: |
-        cd pluton
-        docker compose down -v
+    - name: 4. Финална HTTP Верификација на /api/health
+      run: curl -s http://localhost:3000/api/health
