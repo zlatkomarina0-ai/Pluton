@@ -2,7 +2,6 @@ version: '3.8'
 
 services:
   backend:
-    # Docker гради апликацију из фолдера backend/backend где се реално налазе Dockerfile и requirements.txt
     build:
       context: .
       dockerfile: backend/backend/Dockerfile
@@ -25,7 +24,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      # Аутоматско покретање база и семена из твог database/ фолдера
+      # Автоматско мапирање на твоите постоечки SQL скрипти од папките
       - ./database/schema.sql:/docker-entrypoint-initdb.d/1-schema.sql
       - ./database/seed.sql:/docker-entrypoint-initdb.d/2-seed.sql
     healthcheck:
