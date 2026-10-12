@@ -1,33 +1,46 @@
-name: PLUTON Real Runtime Verification
+version: "3.9"
 
-on: [push, pull_request]
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: pluton-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: pluton_db
+      POSTGRES_USER: pluton_user
+      POSTGRES_PASSWORD: pluton_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
-jobs:
-  runtime-validation:
-    runs-on: ubuntu-latest
-    steps:
-    - name: 1. Вчитување на кодот (Checkout Repo)
-      uses: actions/checkout@v4
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pluton-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://pluton_user:pluton_password@db:5432/pluton_db
 
-    - name: 2. Оркестрација и градење на Docker Compose во живо
-      run: |
-        docker compose down -v
-        docker compose up --build -d
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: pluton-web
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
 
-    - name: 3. Интелигентно чекање на PostgreSQL и FastAPI серверот
-      run: |
-        echo "Се чека апликацијата на порт 3000..."
-        for i in {1..15}; do
-          if curl -s http://localhost:3000/api/health | grep -q "ok"; then
-            echo "УСПЕШНО: PLUTON контејнерот и PostgreSQL базата се покренати во облак!"
-            exit 0
-          fi
-          echo "Базата сè уште се иницијализира (Обид $i/15)..."
-          sleep 2
-        done
-        echo "ГРЕШКА: Времето за иницијализација истече!"
-        docker compose logs
-        exit 1
-
-    - name: 4. Финална HTTP Верификација на /api/health
-      run: curl -s http://localhost:3000/api/health
+volumes:
+  postgres_data:
