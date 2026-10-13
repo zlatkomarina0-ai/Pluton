@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+import os
+
+from app.routers.sources import router as sources_router
 
 app = FastAPI(title="PLUTON Core", version="1.0.0")
 
@@ -12,6 +14,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(sources_router)
+
+# scheduler start is optional, controlled by ENABLE_SCHEDULER env var
+if os.getenv("ENABLE_SCHEDULER", "false").lower() == "true":
+    try:
+        from app.scheduler import start_scheduler_in_thread
+
+        start_scheduler_in_thread(interval_seconds=int(os.getenv("SCHEDULER_INTERVAL_SECONDS", "60")))
+    except Exception:
+        pass
+
 
 @app.get("/")
 def root():
@@ -21,6 +34,7 @@ def root():
         "phase": "1",
         "message": "PLUTON core API is running."
     }
+
 
 
 @app.get("/api/health")
@@ -34,6 +48,7 @@ def health_check():
     }
 
 
+
 @app.get("/api/summary")
 def summary():
     return {
@@ -41,25 +56,4 @@ def summary():
         "stack": ["FastAPI", "PostgreSQL", "SQLAlchemy", "Alembic"],
         "modules": ["users", "sports", "leagues", "teams", "fixtures", "predictions"],
         "status": "operational"
-    }
-
-
-class PredictionRequest(BaseModel):
-    fixture_id: int
-    home_score: int
-    away_score: int
-    note: str | None = None
-
-
-@app.post("/api/predictions")
-def create_prediction(payload: PredictionRequest):
-    return {
-        "status": "accepted",
-        "fixture_id": payload.fixture_id,
-        "prediction": {
-            "home_score": payload.home_score,
-            "away_score": payload.away_score,
-            "note": payload.note,
-        },
-        "message": "Prediction accepted and queued for processing."
     }
