@@ -1,10 +1,10 @@
 import logging
 import threading
 import time
-from datetime import timedelta
 
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.dependencies import get_db
 from app.services.polling_service import PollingService
 
@@ -13,11 +13,10 @@ logger.setLevel(logging.INFO)
 
 
 def scheduler_loop(interval_seconds: int = 60):
-    """
-    Simple scheduler loop that polls all active sports every interval_seconds.
-    This is intentionally simple and error-safe: exceptions are caught and logged.
-    """
-    # define the sports you want to poll automatically
+    if interval_seconds <= 0:
+        logger.warning("Scheduler disabled: invalid interval_seconds=%s", interval_seconds)
+        return
+
     sports = ["football", "basketball", "handball"]
     while True:
         try:
@@ -28,7 +27,13 @@ def scheduler_loop(interval_seconds: int = 60):
                     logger.info("Scheduler polling sport=%s", sport)
                     try:
                         res = service.poll_sport(sport)
-                        logger.info("Scheduler result sport=%s processed=%d success=%d failure=%d", sport, res["processed_sources"], res["success_count"], res["failure_count"])
+                        logger.info(
+                            "Scheduler result sport=%s processed=%d success=%d failure=%d",
+                            sport,
+                            res["processed_sources"],
+                            res["success_count"],
+                            res["failure_count"],
+                        )
                     except Exception as e:
                         logger.exception("Polling failed for sport=%s: %s", sport, e)
             finally:
@@ -39,6 +44,12 @@ def scheduler_loop(interval_seconds: int = 60):
 
 
 def start_scheduler_in_thread(interval_seconds: int = 60):
+    if not settings.ENABLE_SCHEDULER:
+        logger.info("Scheduler disabled by settings")
+        return None
+    if interval_seconds <= 0:
+        logger.warning("Scheduler not started because interval_seconds is invalid: %s", interval_seconds)
+        return None
     t = threading.Thread(target=scheduler_loop, args=(interval_seconds,), daemon=True)
     t.start()
     return t

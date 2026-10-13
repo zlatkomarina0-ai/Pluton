@@ -2,6 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
 
+from app.config import settings
+from app.middleware.api_quota import ApiQuotaMiddleware
+from app.middleware.request_logging import RequestLoggingMiddleware
 from app.routers.sources import router as sources_router
 
 app = FastAPI(title="PLUTON Core", version="1.0.0")
@@ -13,15 +16,17 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(RequestLoggingMiddleware)
+app.add_middleware(ApiQuotaMiddleware)
 
 app.include_router(sources_router)
 
 # scheduler start is optional, controlled by ENABLE_SCHEDULER env var
-if os.getenv("ENABLE_SCHEDULER", "false").lower() == "true":
+if settings.ENABLE_SCHEDULER:
     try:
         from app.scheduler import start_scheduler_in_thread
 
-        start_scheduler_in_thread(interval_seconds=int(os.getenv("SCHEDULER_INTERVAL_SECONDS", "60")))
+        start_scheduler_in_thread(interval_seconds=settings.SCHEDULER_INTERVAL_SECONDS)
     except Exception:
         pass
 
@@ -31,10 +36,9 @@ def root():
     return {
         "service": "PLUTON",
         "status": "online",
-        "phase": "1",
-        "message": "PLUTON core API is running."
+        "phase": "8-hardening",
+        "message": "PLUTON core API is running.",
     }
-
 
 
 @app.get("/api/health")
@@ -42,11 +46,10 @@ def health_check():
     return {
         "status": "ok",
         "service": "PLUTON",
-        "phase": "1",
+        "phase": "8-hardening",
         "database": "ready",
-        "frontend": "available"
+        "frontend": "available",
     }
-
 
 
 @app.get("/api/summary")
@@ -55,5 +58,5 @@ def summary():
         "project": "PLUTON",
         "stack": ["FastAPI", "PostgreSQL", "SQLAlchemy", "Alembic"],
         "modules": ["users", "sports", "leagues", "teams", "fixtures", "predictions"],
-        "status": "operational"
+        "status": "operational",
     }
